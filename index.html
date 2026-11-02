@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1c7a4c">
+<title>จัดคอสอาหาร</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one tall column for a phone. Targets on top, the day's meals as stacked rows, a copy-ready message to Mum at the bottom. */
+:root {
+  --bg: #f3f6f3;
+  --surface: #ffffff;
+  --ink: #17261e;
+  --muted: #5d6f65;
+  --line: #d9e2dc;
+  --accent: #1c7a4c;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe4;
+  --warn: #b4620f;
+  --warn-soft: #f8e8d2;
+  --bad: #b3361f;
+  --bad-soft: #f6dcd5;
+  --font: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Leelawadee UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Menlo', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1612; --surface: #17211b; --ink: #e7efe9; --muted: #98aca1; --line: #26352c;
+    --accent: #55cf92; --accent-ink: #08140d; --accent-soft: #163626;
+    --warn: #e8a255; --warn-soft: #3a2a14; --bad: #ee8570; --bad-soft: #3d1f19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1612; --surface: #17211b; --ink: #e7efe9; --muted: #98aca1; --line: #26352c;
+  --accent: #55cf92; --accent-ink: #08140d; --accent-soft: #163626;
+  --warn: #e8a255; --warn-soft: #3a2a14; --bad: #ee8570; --bad-soft: #3d1f19;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 28px; line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.sum { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.meter-head b { font-size: 14px; font-weight: 600; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 500; }
+.num small { font-size: 13px; color: var(--muted); font-family: var(--font); }
+.bar { position: relative; height: 12px; background: var(--line); border-radius: 6px; overflow: hidden; }
+.bar .zone { position: absolute; top: 0; bottom: 0; background: var(--accent-soft); }
+.bar .fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); border-radius: 6px; transition: width .25s ease, background .25s ease; }
+.bar .fill.warn { background: var(--warn); }
+.bar .fill.bad { background: var(--bad); }
+.legend { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+.status { display: inline-block; align-self: flex-start; padding: 4px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+.status.warn { background: var(--warn-soft); color: var(--warn); }
+.status.bad { background: var(--bad-soft); color: var(--bad); }
+
+.meals { display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; list-style: none; }
+.meal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+.meal .slot { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); grid-column: 1 / -1; display: flex; justify-content: space-between; }
+.meal .name { font-weight: 600; font-size: 17px; line-height: 1.35; margin: 0; }
+.meal .qty { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
+.meal .nums { font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin: 2px 0 0; }
+.meal .nums b { color: var(--ink); font-weight: 500; }
+.swap { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 14px; font-weight: 600; font-size: 14px; min-height: 44px; }
+.swap:hover { border-color: var(--accent); color: var(--accent); }
+.meal.off .name { color: var(--muted); font-weight: 500; }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 12px 18px; font-weight: 600; min-height: 48px; }
+.ghost { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 18px; font-weight: 600; min-height: 48px; }
+
+.msg { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.msg h2 { margin: 0; font-size: 17px; }
+.msg p { margin: 0; color: var(--muted); font-size: 14px; }
+textarea { width: 100%; min-height: 220px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; line-height: 1.6; padding: 12px; }
+.note { color: var(--muted); font-size: 13px; }
+.toast { min-height: 20px; font-size: 14px; color: var(--accent); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .bar .fill { transition: none; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>จัดคอสอาหาร</h1>
+      <p class="sub" id="date"></p>
+    </div>
+    <div class="seg" role="group" aria-label="ระดับเป้า">
+      <button type="button" class="mode-btn" data-mode="recomp" aria-pressed="false">รีคอมป์</button>
+      <button type="button" class="mode-btn" data-mode="cut" aria-pressed="true">ลดไขมันเบา</button>
+      <button type="button" class="mode-btn" data-mode="strict" aria-pressed="false">เข้ม</button>
+    </div>
+  </div>
+
+  <section class="sum" aria-label="สรุปเทียบเป้า">
+    <div class="meter">
+      <div class="meter-head"><b>พลังงาน</b><span class="num" id="kcal-num"></span></div>
+      <div class="bar" id="kcal-bar"><div class="zone" id="kcal-zone"></div><div class="fill" id="kcal-fill"></div></div>
+      <div class="legend"><span id="kcal-legend"></span></div>
+    </div>
+    <div class="meter">
+      <div class="meter-head"><b>โปรตีน</b><span class="num" id="p-num"></span></div>
+      <div class="bar" id="p-bar"><div class="zone" id="p-zone"></div><div class="fill" id="p-fill"></div></div>
+      <div class="legend"><span id="p-legend"></span></div>
+    </div>
+    <span class="status" id="status"></span>
+  </section>
+
+  <p class="note" id="level-note"></p>
+
+  <ol class="meals" id="meals"></ol>
+
+  <div class="actions">
+    <button type="button" class="primary" id="shuffle">สุ่มเมนูใหม่ให้ตรงเป้า</button>
+  </div>
+
+  <section class="msg" aria-label="ข้อความถึงแม่">
+    <h2>ข้อความส่งแม่</h2>
+    <p>ก๊อปไปวางใน LINE ได้เลย ข้อความจะเปลี่ยนตามเมนูที่เลือกข้างบน</p>
+    <textarea id="msg" id-note="msg" aria-label="ข้อความถึงแม่" readonly></textarea>
+    <div class="actions">
+      <button type="button" class="ghost" id="copy">คัดลอกข้อความ</button>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="note">ตัวเลขทั้งหมดเป็นค่าประมาณจากที่นนท์เล่าและที่ดูจากรูป ไม่ได้ชั่ง ใช้เป็นแนวทาง ไม่ใช่คำแนะนำทางการแพทย์ เลือกระดับเป้าได้ที่ปุ่มด้านบน ค่าเริ่มต้นคือ "ลดไขมันเบา"</p>
+</div>
+
+<script>
+/* kcal and p = protein in grams. Values are midpoints of the ranges noted when each food was logged. */
+var SLOTS = [
+  { id: 'm1', label: 'มื้อแรก', time: '10:00-12:00', opts: [
+    { name: 'หมูปิ้ง 8 ไม้', qty: 'ไม่เอาข้าวเหนียว', kcal: 600, p: 44 },
+    { name: 'หมูปิ้ง 6 ไม้', qty: 'ไม่เอาข้าวเหนียว', kcal: 450, p: 33 },
+    { name: 'ข้าวกล่องไก่ทอดชุบแป้ง 5 ชิ้น', qty: 'ข้าวกิน 1 ใน 4 ของกล่อง ซอสพริกครึ่งซอง', kcal: 540, p: 28 },
+    { name: 'ข้าวไข่เจียว', qty: 'กินไข่เจียวให้หมด ข้าวแค่ 1 ใน 4 ของกล่อง', kcal: 405, p: 18 },
+    { name: 'ยำไก่แซ่บ ชามใหญ่ + ข้าวนิดเดียว', qty: 'ไม่ต้องตักข้าวเยอะ', kcal: 530, p: 35 },
+    { name: 'ปลาแกะ + ไข่ดาว + ข้าวนิดเดียว', qty: 'ปลาแกะราว 120 กรัม ไข่ดาวครึ่งฟอง ข้าวราว 100 กรัม', kcal: 390, p: 32 }
+  ]},
+  { id: 's1', label: 'นม/ของว่างช่วงบ่าย', time: '14:00-17:00', opts: [
+    { name: 'ไม่กิน', qty: '', kcal: 0, p: 0, off: true },
+    { name: 'นมเมจิจืด 1 ขวดเล็ก + กล้วยน้ำว้า 1 ลูก', qty: 'นม 200 มล.', kcal: 142, p: 8 },
+    { name: 'นม Benefitt 1 กล่อง', qty: 'นมโปรตีน', kcal: 220, p: 31 },
+    { name: 'ไส้กรอกมินิค็อกเทลครึ่งแพ็ก + นมเมจิจืด', qty: 'ไส้กรอกราว 70 กรัม โซเดียมสูง ดื่มน้ำตามเยอะๆ', kcal: 280, p: 17 },
+    { name: 'นม Benefitt 1 กล่อง + กล้วยน้ำว้า 2 ลูก', qty: 'ก่อนหรือหลังเล่นเวท', kcal: 365, p: 33 }
+  ]},
+  { id: 'd', label: 'มื้อเย็น', time: '18:00-19:30', opts: [
+    { name: 'ปลาแกะ + ไข่ดาวครึ่งซีก + ข้าวราว 100 กรัม', qty: 'เพิ่มน้ำเต้าหู้ไม่เติมน้ำตาล 1 ถุง', kcal: 460, p: 37 },
+    { name: 'ปลาแกะ + ไข่ดาวครึ่งซีก ไม่เอาข้าว', qty: 'เพิ่มน้ำเต้าหู้ไม่เติมน้ำตาล 1 ถุง', kcal: 330, p: 35 },
+    { name: 'ต้มแซ่บเนื้อ 1 ถุง + ปีกไก่ทอด 5 ชิ้น', qty: 'ไม่กินข้าว', kcal: 650, p: 49 },
+    { name: 'ต้มแซ่บเนื้อ 1 ถุง + ปีกไก่ทอด 3 ชิ้น', qty: 'ไม่กินข้าว', kcal: 500, p: 38 },
+    { name: 'ข้าวไข่เจียว + ต้มแซ่บหมู 1 ถุง', qty: 'ข้าวกิน 1 ใน 4 ของกล่อง', kcal: 680, p: 39 },
+    { name: 'หมูปิ้ง 6 ไม้ + ต้มแซ่บหมู 1 ถุง', qty: 'ไม่กินข้าว', kcal: 725, p: 54 },
+    { name: 'ยำไก่แซ่บ ชามใหญ่ ไม่เอาข้าว', qty: 'ตักผักกินด้วย', kcal: 450, p: 35 }
+  ]},
+  { id: 's2', label: 'นมก่อนนอน (ถ้าหิว)', time: '21:00-22:30', opts: [
+    { name: 'ไม่กิน', qty: '', kcal: 0, p: 0, off: true },
+    { name: 'นมไทย-เดนมาร์ก 1 กล่อง', qty: '', kcal: 170, p: 8 },
+    { name: 'นม Benefitt 1 กล่อง', qty: '', kcal: 220, p: 31 },
+    { name: 'ฝรั่ง 1 ลูก + ชมพู่ 1 ลูก', qty: '', kcal: 100, p: 3 }
+  ]},
+  { id: 'sw', label: 'ของหวาน (เลือกได้ 1 อย่าง)', time: 'ตอนไหนก็ได้', opts: [
+    { name: 'ไม่กิน', qty: '', kcal: 0, p: 0, off: true },
+    { name: 'Nutella Biscuits 2 ชิ้น', qty: '', kcal: 140, p: 2 },
+    { name: 'ช็อกโกแลต 1 ชิ้น', qty: '', kcal: 60, p: 1 },
+    { name: 'ไอศกรีมแท่ง 1 ไม้', qty: '', kcal: 150, p: 2 }
+  ]}
+];
+var MODES = {
+  recomp: { lo: 1850, hi: 2200, pmin: 115, note: 'รีคอมป์: ลดไขมันช้าๆ รักษากล้ามง่ายที่สุด' },
+  cut:    { lo: 1700, hi: 1900, pmin: 120, note: 'ลดไขมันเบา: ลดชัดขึ้นแต่ยังกินได้ครบ น้ำหนักลงราว 0.3-0.5 กก. ต่อสัปดาห์' },
+  strict: { lo: 1550, hi: 1750, pmin: 125, note: 'เข้ม: ลดเร็วขึ้น แต่หิวง่ายและเสี่ยงเสียกล้ามถ้าทำนาน ไม่แนะนำเกิน 3-4 สัปดาห์ และถ้าปวดหัวอยู่ ไม่ควรลดแรง' }
+};
+var mode = 'cut';
+var sel = {};
+var $ = function (id) { return document.getElementById(id); };
+
+function totals() {
+  var k = 0, p = 0;
+  SLOTS.forEach(function (s) { var o = s.opts[sel[s.id]]; k += o.kcal; p += o.p; });
+  return { k: k, p: p };
+}
+function randInt(n) { return Math.floor(Math.random() * n); }
+
+function randomize() {
+  var m = MODES[mode], good = [], best = null, bestScore = 1e9;
+  (function walk(i, picks, k, p) {
+    if (i === SLOTS.length) {
+      var miss = (k < m.lo ? m.lo - k : k > m.hi ? k - m.hi : 0) + (p < m.pmin ? (m.pmin - p) * 6 : 0);
+      if (miss === 0) good.push(picks.slice());
+      else if (miss < bestScore) { bestScore = miss; best = picks.slice(); }
+      return;
+    }
+    SLOTS[i].opts.forEach(function (o, j) { picks.push(j); walk(i + 1, picks, k + o.kcal, p + o.p); picks.pop(); });
+  })(0, [], 0, 0);
+  var chosen = good.length ? good[randInt(good.length)] : best;
+  SLOTS.forEach(function (s, i) { sel[s.id] = chosen[i]; });
+  render();
+}
+
+function setBar(prefix, value, lo, hi, max) {
+  var pct = function (x) { return Math.max(0, Math.min(100, x / max * 100)); };
+  $(prefix + '-zone').style.left = pct(lo) + '%';
+  $(prefix + '-zone').style.width = (pct(hi) - pct(lo)) + '%';
+  var f = $(prefix + '-fill');
+  f.style.width = pct(value) + '%';
+  f.className = 'fill' + (value > hi ? ' bad' : value < lo ? ' warn' : '');
+}
+
+function render() {
+  var m = MODES[mode], t = totals();
+  $('kcal-num').innerHTML = t.k.toLocaleString('en-US') + ' <small>kcal</small>';
+  $('kcal-legend').textContent = 'เป้า ' + m.lo.toLocaleString('en-US') + ' ถึง ' + m.hi.toLocaleString('en-US') + ' kcal';
+  setBar('kcal', t.k, m.lo, m.hi, 2600);
+  $('p-num').innerHTML = t.p + ' <small>กรัม</small>';
+  $('p-legend').textContent = 'เป้าอย่างน้อย ' + m.pmin + ' กรัม (ควรถึง 130)';
+  $('level-note').textContent = m.note;
+  setBar('p', t.p, m.pmin, 140, 160);
+
+  var st = $('status'), msgs = [], cls = '';
+  if (t.k > m.hi) { msgs.push('พลังงานเกินเป้า ' + (t.k - m.hi) + ' kcal'); cls = 'bad'; }
+  else if (t.k < m.lo) { msgs.push('พลังงานต่ำกว่าเป้า ' + (m.lo - t.k) + ' kcal'); cls = 'warn'; }
+  if (t.p < m.pmin) { msgs.push('โปรตีนขาด ' + (m.pmin - t.p) + ' กรัม'); cls = cls === 'bad' ? 'bad' : 'warn'; }
+  st.textContent = msgs.length ? msgs.join(' และ ') : 'อยู่ในเป้า';
+  st.className = 'status' + (cls ? ' ' + cls : '');
+
+  var ol = $('meals'); ol.innerHTML = '';
+  SLOTS.forEach(function (s) {
+    var o = s.opts[sel[s.id]], li = document.createElement('li');
+    li.className = 'meal' + (o.off ? ' off' : '');
+    var left = document.createElement('div');
+    var slot = document.createElement('div'); slot.className = 'slot';
+    slot.innerHTML = '<span></span><span></span>';
+    slot.children[0].textContent = s.label; slot.children[1].textContent = s.time;
+    var name = document.createElement('p'); name.className = 'name'; name.textContent = o.name;
+    left.appendChild(name);
+    if (o.qty) { var q = document.createElement('p'); q.className = 'qty'; q.textContent = o.qty; left.appendChild(q); }
+    if (!o.off) { var n = document.createElement('p'); n.className = 'nums'; n.innerHTML = '<b>' + o.kcal + '</b> kcal  <b>' + o.p + '</b> g โปรตีน'; left.appendChild(n); }
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'swap'; b.textContent = 'สลับ';
+    b.setAttribute('aria-label', 'สลับเมนู' + s.label);
+    b.onclick = function () { sel[s.id] = (sel[s.id] + 1) % s.opts.length; render(); };
+    li.appendChild(slot); li.appendChild(left); li.appendChild(b);
+    ol.appendChild(li);
+  });
+
+  var lines = ['แม่ วันนี้นนท์ขอกินตามนี้นะ ช่วยซื้อให้หน่อยได้ไหม', ''];
+  SLOTS.forEach(function (s) {
+    var o = s.opts[sel[s.id]];
+    if (o.off) return;
+    lines.push(s.label.replace(' (ถ้าหิว)', '').replace(' (เลือกได้ 1 อย่าง)', '') + ' (' + s.time.split('-')[0] + '): ' + o.name + (o.qty ? ' (' + o.qty + ')' : ''));
+  });
+  lines.push('', 'รวมประมาณ ' + t.k.toLocaleString('en-US') + ' kcal / โปรตีน ' + t.p + ' กรัม', 'ขอบคุณนะแม่');
+  $('msg').value = lines.join('\n');
+}
+
+function paintMode() {
+  var btns = document.querySelectorAll('.mode-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-pressed', String(btns[i].getAttribute('data-mode') === mode));
+}
+function setMode(next) {
+  mode = next;
+  paintMode();
+  try { localStorage.setItem('meal-level', next); } catch (e) {}
+  randomize();
+}
+(function () {
+  var btns = document.querySelectorAll('.mode-btn');
+  for (var i = 0; i < btns.length; i++) {
+    (function (b) { b.onclick = function () { setMode(b.getAttribute('data-mode')); }; })(btns[i]);
+  }
+})();
+$('shuffle').onclick = randomize;
+$('copy').onclick = function () {
+  var ta = $('msg'), t = $('toast');
+  var done = function () { t.textContent = 'คัดลอกแล้ว วางใน LINE ได้เลย'; setTimeout(function () { t.textContent = ''; }, 2500); };
+  var fallback = function () { ta.removeAttribute('readonly'); ta.focus(); ta.select(); ta.setSelectionRange(0, 99999); ta.setAttribute('readonly', ''); t.textContent = 'เลือกข้อความให้แล้ว กดคัดลอกค้างไว้ได้เลย'; };
+  try { navigator.clipboard.writeText(ta.value).then(done, fallback); } catch (e) { fallback(); }
+};
+
+(function init() {
+  var d = new Date();
+  $('date').textContent = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  var saved = null; try { saved = localStorage.getItem('meal-level'); } catch (e) {}
+  mode = MODES[saved] ? saved : 'cut';
+  paintMode();
+  randomize();
+})();
+</script>
+
+</html>
