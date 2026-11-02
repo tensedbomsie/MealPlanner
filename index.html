@@ -65,7 +65,7 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent);
 .num small { font-size: 13px; color: var(--muted); font-family: var(--font); }
 .bar { position: relative; height: 12px; background: var(--line); border-radius: 6px; overflow: hidden; }
 .bar .zone { position: absolute; top: 0; bottom: 0; background: var(--accent-soft); }
-.bar .fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); border-radius: 6px; transition: width .25s ease, background .25s ease; }
+.bar .fill { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; transform-origin: left center; transform: scaleX(0); background: var(--accent); border-radius: 6px; transition: transform .25s ease, background-color .25s ease; }
 .bar .fill.warn { background: var(--warn); }
 .bar .fill.bad { background: var(--bad); }
 .legend { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
@@ -222,7 +222,7 @@ function setBar(prefix, value, lo, hi, max) {
   $(prefix + '-zone').style.left = pct(lo) + '%';
   $(prefix + '-zone').style.width = (pct(hi) - pct(lo)) + '%';
   var f = $(prefix + '-fill');
-  f.style.width = pct(value) + '%';
+  f.style.transform = 'scaleX(' + (pct(value) / 100) + ')';
   f.className = 'fill' + (value > hi ? ' bad' : value < lo ? ' warn' : '');
 }
 
